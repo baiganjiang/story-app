@@ -23,6 +23,8 @@ jobs:
       run: npm install
 
     - name: Build Web App
+      env:
+        VITE_API_BASE_URL: 'https://ais-pre-54y535iwyabmane472jtg3-399767249549.europe-west2.run.app'
       run: npm run build
 
     - name: Setup Java

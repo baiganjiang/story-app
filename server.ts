@@ -66,6 +66,17 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Add CORS headers for Capacitor app
+  app.use((req, res, next) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+    if (req.method === "OPTIONS") {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+
   // API Routes
   
   // Stories
@@ -378,8 +389,7 @@ async function startServer() {
             { role: 'user', content: prompt }
           ],
           temperature: temperature || 0.7,
-          max_tokens: max_tokens || 4096,
-          stream: true
+          max_tokens: max_tokens || 4096
         })
       });
 
@@ -404,35 +414,8 @@ async function startServer() {
         }
       }
 
-      res.setHeader('Content-Type', 'text/event-stream');
-      res.setHeader('Cache-Control', 'no-cache');
-      res.setHeader('Connection', 'keep-alive');
-
-      // Send an initial ping to keep the connection alive
-      res.write(': ping\n\n');
-
-      if (response.body) {
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder("utf-8");
-        
-        // Keep-alive interval
-        const keepAliveInterval = setInterval(() => {
-          res.write(': ping\n\n');
-        }, 15000); // Every 15 seconds
-        
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            res.write(decoder.decode(value, { stream: true }));
-          }
-        } finally {
-          clearInterval(keepAliveInterval);
-          res.end();
-        }
-      } else {
-        res.end();
-      }
+      const data = await response.json();
+      res.json(data);
     } catch (error: any) {
       clearTimeout(timeout);
       if (error.name === 'AbortError') {
