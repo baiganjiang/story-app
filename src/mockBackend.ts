@@ -111,7 +111,6 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     
     try {
       // Make the actual request directly from the browser/Capacitor
-      // We set stream: false to avoid CapacitorHttp streaming issues and CORS issues
       const response = await originalFetch(url, {
         method: 'POST',
         headers: {
@@ -127,31 +126,11 @@ window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
           ],
           temperature: temperature || 0.7,
           max_tokens: max_tokens || 4096,
-          stream: false // Changed to false for Android compatibility
+          stream: true
         })
       });
       
-      if (!response.ok) {
-        return response;
-      }
-
-      const json = await response.json();
-      const content = json.choices?.[0]?.message?.content || "";
-      
-      // Simulate SSE stream so geminiService.ts doesn't need to change
-      const sseData = `data: ${JSON.stringify({ choices: [{ delta: { content } }] })}\n\ndata: [DONE]\n\n`;
-      
-      const stream = new ReadableStream({
-        start(controller) {
-          controller.enqueue(new TextEncoder().encode(sseData));
-          controller.close();
-        }
-      });
-
-      return new Response(stream, {
-        headers: { 'Content-Type': 'text/event-stream' }
-      });
-      
+      return response; // Return the stream directly!
     } catch (error: any) {
       console.error("[Mock AI Proxy] Network Error:", error);
       return createResponse({ error: `与 AI 供应商通信时发生网络错误。请检查 URL: ${url}` }, 500);
