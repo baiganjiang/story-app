@@ -4,7 +4,12 @@ const config: CapacitorConfig = {
   appId: 'com.aistudio.storyapp',
   appName: 'AI Story Creator',
   webDir: 'dist',
-  bundledWebRuntime: false
+  bundledWebRuntime: false,
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
 };
 
 export default config;
